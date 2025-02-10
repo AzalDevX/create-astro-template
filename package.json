@@ -6,9 +6,22 @@
   "bin": {
     "create-astro-template": "./bin/cli.js"
   },
+  "files": [
+    "bin/",
+    "src/"
+  ],
   "scripts": {
     "start": "node bin/cli.js"
   },
+  "keywords": [
+    "astro",
+    "template",
+    "cli",
+    "github",
+    "create-astro-template"
+  ],
+  "author": "Tu Nombre",
+  "license": "MIT",
   "dependencies": {
     "@octokit/rest": "^19.0.7",
     "chalk": "^5.3.0",
@@ -16,11 +29,20 @@
     "figlet": "^1.7.0",
     "gradient-string": "^2.0.2",
     "inquirer": "^9.2.14",
-    "open": "^9.1.0",
-    "ora": "^8.0.1",
-    "server-destroy": "^1.0.1"
+    "nanospinner": "^1.1.0"
   },
   "engines": {
     "node": ">=14.16"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AzalDevX/create-astro-template.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AzalDevX/create-astro-template/issues"
+  },
+  "homepage": "https://github.com/AzalDevX/create-astro-template#readme",
+  "publishConfig": {
+    "access": "public"
   }
 }
