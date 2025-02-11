@@ -24,8 +24,8 @@ export async function create(options) {
     const user = await github.getUser();
     spinner.success({ text: `¡Bienvenido, ${user.login}! 🚀` });
 
-    // Obtener nombre del repositorio
-    const { repoName } = await inquirer.prompt([
+    // Preguntar detalles del repositorio
+    const answers = await inquirer.prompt([
       {
         type: 'input',
         name: 'repoName',
@@ -38,22 +38,41 @@ export async function create(options) {
           return true;
         },
       },
+      {
+        type: 'input',
+        name: 'description',
+        message: '📝 Descripción del repositorio (opcional):',
+        default: 'Proyecto creado con create-astro-template de AzalDevX',
+      },
+      {
+        type: 'list',
+        name: 'visibility',
+        message: '🔒 ¿Quieres que el repositorio sea público o privado?',
+        choices: [
+          { name: '🌎 Público - Visible para todos', value: 'public' },
+          { name: '🔐 Privado - Solo visible para ti', value: 'private' },
+        ],
+        default: 'public',
+      },
     ]);
 
     // Crear repositorio
     const createSpinner = ui
-      .createSpinner('Creando repositorio mágico...')
+      .createSpinner('🚀 Creando repositorio mágico...')
       .start();
-    await github.createRepository(repoName, options.private);
-    createSpinner.success({ text: '¡Repositorio creado exitosamente! ✨' });
+    await github.createRepository(answers.repoName, {
+      private: answers.visibility === 'private',
+      description: answers.description,
+    });
+    createSpinner.success({ text: '✨ ¡Repositorio creado exitosamente!' });
 
     // Clonar y configurar
-    await setup(user.login, repoName, ui);
+    await setup(user.login, answers.repoName, ui);
 
     // Mostrar mensaje de éxito
     ui.rainbow('\n🎉 ¡Proyecto creado exitosamente! 🎉');
     ui.info(
-      `\nGitHub Repository: https://github.com/${user.login}/${repoName}`
+      `\nGitHub Repository: https://github.com/${user.login}/${answers.repoName}`
     );
 
     // Verificar GitHub Desktop
@@ -63,31 +82,28 @@ export async function create(options) {
         {
           type: 'confirm',
           name: 'openDesktop',
-          message: '¿Quieres abrir el repositorio en GitHub Desktop?',
+          message: '🖥️ ¿Quieres abrir el repositorio en GitHub Desktop?',
           default: true,
         },
       ]);
 
       if (openDesktop) {
-        // Asegurarnos de usar la ruta correcta
-        const repoPath = path.resolve(process.cwd(), repoName);
-
-        // Esperar un momento para asegurarnos que el repo está listo
+        const repoPath = path.resolve(process.cwd(), answers.repoName);
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
         const opened = openInGitHubDesktop(repoPath);
         if (opened) {
-          ui.success('¡Abriendo GitHub Desktop! 🚀');
+          ui.success('🚀 ¡Abriendo GitHub Desktop!');
         } else {
           ui.error(
-            'No se pudo abrir GitHub Desktop. Por favor, ábrelo manualmente.'
+            '❌ No se pudo abrir GitHub Desktop. Por favor, ábrelo manualmente.'
           );
-          ui.info(`Ruta del repositorio: ${repoPath}`);
+          ui.info(`📂 Ruta del repositorio: ${repoPath}`);
         }
       }
     }
   } catch (error) {
-    ui.error('Error en el proceso');
+    ui.error('❌ Error en el proceso');
     ui.error(error.message);
     process.exit(1);
   }
