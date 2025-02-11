@@ -1,5 +1,5 @@
 // src/utils/github.js
-import { execSync } from 'child_process';
+import { execSync, spawn } from 'child_process';
 import { logger } from './logger.js';
 
 export class GitHubClient {
@@ -13,7 +13,7 @@ export class GitHubClient {
       logger.info(`GitHub CLI detectado: ${ghVersion.split('\n')[0]}`);
     } catch (error) {
       logger.error(
-        'GitHub CLI (gh) no está instalado. Por favor, instálalo desde: https://cli.github.com/'
+        'GitHub CLI (gh) no está instalado. Por favor, instálalo desde: https://cli.github.com/ o visita https://lalo.lol/create-astro-template.'
       );
       process.exit(1);
     }
@@ -24,13 +24,31 @@ export class GitHubClient {
       const userData = execSync('gh api user', { encoding: 'utf8' });
       return JSON.parse(userData);
     } catch (error) {
-      if (error.status === 1) {
-        logger.error(
-          'No has iniciado sesión en GitHub CLI. Ejecuta: gh auth login'
-        );
-        process.exit(1);
+      // Si no está autenticado, ejecutar login
+      if (error.message.includes('gh auth login')) {
+        logger.info('🔑 Iniciando autenticación con GitHub...');
+
+        try {
+          // Ejecutar el login de forma interactiva
+          execSync('gh auth login --web', {
+            stdio: 'inherit', // Esto es crucial para la interactividad
+            encoding: 'utf8',
+          });
+
+          // Intentar obtener los datos del usuario nuevamente después del login
+          logger.info('🔄 Verificando autenticación...');
+          const newUserData = execSync('gh api user', { encoding: 'utf8' });
+          return JSON.parse(newUserData);
+        } catch (loginError) {
+          logger.error('❌ Error durante la autenticación');
+          logger.error(loginError.message);
+          process.exit(1);
+        }
       }
-      throw error;
+
+      logger.error('❌ Error inesperado');
+      logger.error(error.message);
+      process.exit(1);
     }
   }
 
